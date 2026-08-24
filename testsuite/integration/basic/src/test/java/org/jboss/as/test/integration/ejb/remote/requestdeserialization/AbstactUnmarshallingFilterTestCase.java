@@ -41,9 +41,12 @@ public class AbstactUnmarshallingFilterTestCase {
 
     <T> T lookup(String beanName, Class<T> interfaceType, boolean http) throws NamingException {
         final Context jndiContext = getContext(http);
-
-        return interfaceType.cast(jndiContext.lookup(String.format("ejb:/%s/%s!%s",
-                getClass().getSimpleName(), beanName, interfaceType.getName())));
+        try {
+            return interfaceType.cast(jndiContext.lookup(String.format("ejb:/%s/%s!%s",
+                    getClass().getSimpleName(), beanName, interfaceType.getName())));
+        } finally {
+            jndiContext.close();
+        }
     }
 
     private Context getContext(boolean http) throws NamingException {

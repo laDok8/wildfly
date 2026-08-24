@@ -113,7 +113,7 @@ public class SharedClientContextTestCase extends AbstractCliTestBase {
         AbstractCliTestBase.closeCLI();
     }
 
-    @Test
+    @Test(timeout = 300000)
     public void testSharedClientContext() throws IOException {
         try (CloseableHttpClient httpClient = HttpClients.createDefault()) {
             String url = frontendUrl.toExternalForm() + "frontend";

@@ -79,43 +79,52 @@ public class HttpRemoteEJBJndiBasedInvocationTestCase {
 
     @Test
     public void testRemoteSLSBInvocation() throws Exception {
-        final RemoteEcho remoteEcho = (RemoteEcho) getContext().lookup("ejb:" + APP_NAME + "/" + MODULE_NAME + "/" + DISTINCT_NAME
-                + "/" + EchoBean.class.getSimpleName() + "!" + RemoteEcho.class.getName());
-        Assert.assertNotNull("Lookup returned a null bean proxy", remoteEcho);
-        final String msg = "Hello world from a really remote client!!!";
-        final String echo = remoteEcho.echo(msg);
-        Assert.assertEquals("Unexpected echo returned from remote bean", msg, echo);
+        final Context context = getContext();
+        try {
+            final RemoteEcho remoteEcho = (RemoteEcho) context.lookup("ejb:" + APP_NAME + "/" + MODULE_NAME + "/" + DISTINCT_NAME
+                    + "/" + EchoBean.class.getSimpleName() + "!" + RemoteEcho.class.getName());
+            Assert.assertNotNull("Lookup returned a null bean proxy", remoteEcho);
+            final String msg = "Hello world from a really remote client!!!";
+            final String echo = remoteEcho.echo(msg);
+            Assert.assertEquals("Unexpected echo returned from remote bean", msg, echo);
 
-        // invoke a method which uses application specific type instead of primitives
-        final EchoMessage message = new EchoMessage();
-        message.setMessage("Hello");
-        final EchoMessage echoResponse = remoteEcho.echo(message);
-        Assert.assertNotNull("Echo response was null", echoResponse);
-        Assert.assertEquals("Unexpected echo returned from the bean", message.getMessage(), echoResponse.getMessage());
+            // invoke a method which uses application specific type instead of primitives
+            final EchoMessage message = new EchoMessage();
+            message.setMessage("Hello");
+            final EchoMessage echoResponse = remoteEcho.echo(message);
+            Assert.assertNotNull("Echo response was null", echoResponse);
+            Assert.assertEquals("Unexpected echo returned from the bean", message.getMessage(), echoResponse.getMessage());
+        } finally {
+            context.close();
+        }
     }
 
     @Test
     public void testRemoteSFSBInvocation() throws Exception {
-        final RemoteCounter remoteCounter = (RemoteCounter) getContext().lookup("ejb:" + APP_NAME + "/" + MODULE_NAME + "/" + DISTINCT_NAME
-                + "/" + CounterBean.class.getSimpleName() + "!" + RemoteCounter.class.getName() + "?stateful");
-        Assert.assertNotNull("Lookup returned a null bean proxy", remoteCounter);
-        Assert.assertEquals("Unexpected initial count returned by bean", 0, remoteCounter.getCount());
-        final int NUM_TIMES = 25;
-        // test increment
-        for (int i = 0; i < NUM_TIMES; i++) {
-            remoteCounter.incrementCount();
-            final int currentCount = remoteCounter.getCount();
-            Assert.assertEquals("Unexpected count after increment", i + 1, currentCount);
+        final Context context = getContext();
+        try {
+            final RemoteCounter remoteCounter = (RemoteCounter) context.lookup("ejb:" + APP_NAME + "/" + MODULE_NAME + "/" + DISTINCT_NAME
+                    + "/" + CounterBean.class.getSimpleName() + "!" + RemoteCounter.class.getName() + "?stateful");
+            Assert.assertNotNull("Lookup returned a null bean proxy", remoteCounter);
+            Assert.assertEquals("Unexpected initial count returned by bean", 0, remoteCounter.getCount());
+            final int NUM_TIMES = 25;
+            // test increment
+            for (int i = 0; i < NUM_TIMES; i++) {
+                remoteCounter.incrementCount();
+                final int currentCount = remoteCounter.getCount();
+                Assert.assertEquals("Unexpected count after increment", i + 1, currentCount);
+            }
+            Assert.assertEquals("Unexpected total count after increment", NUM_TIMES, remoteCounter.getCount());
+            // test decrement
+            for (int i = NUM_TIMES; i > 0; i--) {
+                remoteCounter.decrementCount();
+                final int currentCount = remoteCounter.getCount();
+                Assert.assertEquals("Unexpected count after decrement", i - 1, currentCount);
+            }
+            Assert.assertEquals("Unexpected total count after decrement", 0, remoteCounter.getCount());
+        } finally {
+            context.close();
         }
-        Assert.assertEquals("Unexpected total count after increment", NUM_TIMES, remoteCounter.getCount());
-        // test decrement
-        for (int i = NUM_TIMES; i > 0; i--) {
-            remoteCounter.decrementCount();
-            final int currentCount = remoteCounter.getCount();
-            Assert.assertEquals("Unexpected count after decrement", i - 1, currentCount);
-        }
-        Assert.assertEquals("Unexpected total count after decrement", 0, remoteCounter.getCount());
-
     }
 
     private URI getHttpUri() throws URISyntaxException {

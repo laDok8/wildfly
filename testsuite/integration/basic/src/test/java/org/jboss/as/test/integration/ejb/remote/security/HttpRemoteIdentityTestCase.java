@@ -99,8 +99,12 @@ public class HttpRemoteIdentityTestCase {
 
     private <T> T lookupEJB(Class<? extends T> beanImplClass, Class<T> remoteInterface) throws Exception {
         final Context context = getRemoteHTTPContext();
-        return (T) context.lookup("ejb:/ejb-remote-security-test/" + beanImplClass.getSimpleName() + "!"
-                + remoteInterface.getName());
+        try {
+            return (T) context.lookup("ejb:/ejb-remote-security-test/" + beanImplClass.getSimpleName() + "!"
+                    + remoteInterface.getName());
+        } finally {
+            context.close();
+        }
     }
 
 }
